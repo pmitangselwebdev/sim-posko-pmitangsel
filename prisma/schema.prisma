@@ -1,0 +1,187 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             Int      @id @default(autoincrement())
+  namaLengkap    String
+  ttl            DateTime
+  jenisKelamin   String
+  alamat         String
+  golonganDarah  String
+  nomorHandphone String   @unique
+  spesialisasi   String
+  asalPMI        String
+  pesan          String?
+  email          String?  @unique
+  password       String?
+  role           String   @default("Petugas") // Petugas, Koordinator, Admin
+  subRole        String?  // posko, ambulance, tanggap-darurat-bencana
+  status         String   @default("siaga") // siaga, cuti, bertugas
+  foto           String?
+  isApproved     Boolean  @default(false) // Approval status for dashboard access
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  reports        Report[]
+  assessments    Assessment[]
+  ambulanceForms AmbulanceForm[]
+  logistics      Logistics[]
+  checklists     Checklist[]
+  communications Communication[]
+  trainings      Training[]
+  schedules      Schedule[]
+  attendances    Attendance[]
+}
+
+model Training {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+  nama        String
+  jenis       String
+  tanggal     DateTime
+  sertifikat  String?
+  status      String   @default("aktif")
+  createdAt   DateTime @default(now())
+}
+
+model Schedule {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  tanggal   DateTime
+  shift     String   // Shift 1 (08.00-20.00), Shift 2 (20.00-08.00)
+  posko     String   @default("Posko PMI Kota Tangerang Selatan")
+  status    String   @default("scheduled") // scheduled, completed, cancelled
+  createdAt DateTime @default(now())
+}
+
+model Attendance {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+  tanggal     DateTime @db.Date
+  checkIn     DateTime?
+  checkOut    DateTime?
+  status      String   @default("absent") // present, absent, late, sick, leave
+  shift       String?  // Shift 1 (08.00-20.00), Shift 2 (20.00-08.00)
+  posko       String?  @default("Posko PMI Kota Tangerang Selatan")
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, tanggal])
+}
+
+model Report {
+  id        Int      @id @default(autoincrement())
+  type      String
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  data      Json
+  createdAt DateTime @default(now())
+}
+
+model Assessment {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id])
+  incidentId Int?
+  incident   Incident? @relation(fields: [incidentId], references: [id])
+  type       String   @default("bencana") // "bencana" or "ambulance"
+  data       Json
+  createdAt  DateTime @default(now())
+}
+
+model AmbulanceForm {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id])
+  incidentId Int?
+  incident   Incident? @relation(fields: [incidentId], references: [id])
+  data       Json
+  createdAt  DateTime @default(now())
+}
+
+model Logistics {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id])
+  incidentId Int?
+  incident   Incident? @relation(fields: [incidentId], references: [id])
+  data       Json
+  createdAt  DateTime @default(now())
+}
+
+model Communication {
+  id         Int      @id @default(autoincrement())
+  incidentId Int
+  incident   Incident @relation(fields: [incidentId], references: [id])
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id])
+  message    String
+  createdAt  DateTime @default(now())
+}
+
+model Incident {
+  id          Int      @id @default(autoincrement())
+  type        String
+  location    String
+  date        DateTime
+  description String?
+  status      String   @default("active")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  assessments Assessment[]
+  ambulanceForms AmbulanceForm[]
+  logistics Logistics[]
+  communications Communication[]
+}
+
+model Vehicle {
+  id           Int         @id @default(autoincrement())
+  type         String
+  nomorPolisi  String      @unique
+  nomorLambung String?
+  posko        String
+  status       String      @default("available")
+  checklists   Checklist[]
+  createdAt    DateTime    @default(now())
+}
+
+model Checklist {
+  id        Int      @id @default(autoincrement())
+  vehicleId Int
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id])
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  data      Json
+  status    String
+  createdAt DateTime @default(now())
+}
+
+model BloodStock {
+  id        Int      @id @default(autoincrement())
+  type      String
+  quantity  Int
+  updatedAt DateTime @updatedAt
+}
+
+model Donation {
+  id        Int      @id @default(autoincrement())
+  type      String
+  amount    Float
+  date      DateTime
+  createdAt DateTime @default(now())
+}
