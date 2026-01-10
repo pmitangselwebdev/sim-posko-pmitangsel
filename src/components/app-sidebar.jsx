@@ -155,6 +155,20 @@ export function AppSidebar({ ...props }) {
     }
   }, [clerkUser])
 
+  // Filter navigation items based on user role
+  const getFilteredNavItems = () => {
+    const userRole = userData?.role
+    const isAdminOrKoordinator = userRole === 'Admin' || userRole === 'Koordinator'
+
+    return data.navMain.filter(item => {
+      // Hide "Manajemen SDM" from Petugas
+      if (item.title === "Manajemen SDM" && !isAdminOrKoordinator) {
+        return false
+      }
+      return true
+    })
+  }
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -179,7 +193,7 @@ export function AppSidebar({ ...props }) {
         </div>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavMain items={getFilteredNavItems()} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />

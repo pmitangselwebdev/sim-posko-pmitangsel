@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { useMounted } from "@/hooks/use-mounted"
 import { useUsers, useDeleteUser, useUpdateUser, useCreateUser } from "@/hooks/use-dashboard"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -16,10 +17,15 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useToast } from "@/hooks/use-toast"
 import { generateSchedulePDF, downloadPDF } from "@/lib/pdfGenerator"
+import { useUser } from "@clerk/nextjs"
 
 export default function ManajemenSDM() {
   const { toast } = useToast()
   const mounted = useMounted()
+  const router = useRouter()
+  const { user: clerkUser } = useUser()
+  const [userData, setUserData] = useState(null)
+  const [hasAccess, setHasAccess] = useState(false)
   const [activeTab, setActiveTab] = useState("personnel")
   const [trainings, setTrainings] = useState([])
   const [schedules, setSchedules] = useState([])
@@ -79,6 +85,43 @@ export default function ManajemenSDM() {
     shift: "",
     posko: ""
   })
+
+  // Check user role access
+  useEffect(() => {
+    const checkAccess = async () => {
+      if (clerkUser?.emailAddresses[0]?.emailAddress) {
+        try {
+          const response = await fetch(`/api/users/profile?email=${clerkUser.emailAddresses[0].emailAddress}`)
+          if (response.ok) {
+            const userData = await response.json()
+            const userRole = userData.role
+            const hasAccess = userRole === 'Admin' || userRole === 'Koordinator'
+
+            setUserData(userData)
+            setHasAccess(hasAccess)
+
+            if (!hasAccess) {
+              // Redirect to dashboard if user doesn't have access
+              router.push('/dashboard')
+              toast({
+                title: "Akses Ditolak",
+                description: "Anda tidak memiliki izin untuk mengakses halaman ini.",
+                variant: "destructive",
+                duration: 5000,
+              })
+            }
+          }
+        } catch (error) {
+          console.error('Error checking user access:', error)
+          router.push('/dashboard')
+        }
+      }
+    }
+
+    if (clerkUser) {
+      checkAccess()
+    }
+  }, [clerkUser, router, toast])
 
   useEffect(() => {
     // Add a small delay to ensure DOM is ready
@@ -404,6 +447,31 @@ export default function ManajemenSDM() {
           </div>
         </div>
         <div className="text-center py-8">Loading...</div>
+      </div>
+    )
+  }
+
+  // Show loading while checking access
+  if (hasAccess === false) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-red-600 mb-2">Akses Ditolak</h2>
+          <p className="text-gray-600">Anda tidak memiliki izin untuk mengakses halaman ini.</p>
+          <p className="text-sm text-gray-500 mt-2">Hanya Admin dan Koordinator yang dapat mengakses Manajemen SDM.</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Show loading while checking access
+  if (hasAccess === null) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Memeriksa izin akses...</p>
+        </div>
       </div>
     )
   }
