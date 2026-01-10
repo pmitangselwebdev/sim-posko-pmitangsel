@@ -16,8 +16,10 @@ export async function GET(request) {
       whereClause = { isApproved: true }
     } else if (approvedParam === 'false') {
       whereClause = { isApproved: false }
+    } else if (approvedParam === 'null' || approvedParam === null || approvedParam === undefined) {
+      // If approvedParam is 'null', null, or not provided, fetch all users
+      whereClause = {}
     }
-    // If approvedParam is 'null' or not provided, fetch all users
 
     // Use a more efficient query that only selects needed fields
     const users = await prisma.user.findMany({

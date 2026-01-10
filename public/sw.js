@@ -29,10 +29,17 @@ self.addEventListener('install', (event) => {
   console.log('Service Worker: Installing...')
   event.waitUntil(
     Promise.all([
-      // Cache static assets
+      // Cache static assets with error handling
       caches.open(STATIC_CACHE).then((cache) => {
         console.log('Service Worker: Caching static assets')
-        return cache.addAll(STATIC_ASSETS)
+        return Promise.allSettled(
+          STATIC_ASSETS.map(url =>
+            cache.add(url).catch(error => {
+              console.log('Service Worker: Failed to cache', url, error)
+              // Continue with other assets even if one fails
+            })
+          )
+        )
       }),
       // Skip waiting to activate immediately
       self.skipWaiting()
