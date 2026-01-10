@@ -9,7 +9,6 @@ export async function GET() {
     const [
       incidentsResult,
       vehiclesResult,
-      usersResult,
       bloodStockResult
     ] = await Promise.allSettled([
       // Get active incidents count by type
@@ -25,13 +24,6 @@ export async function GET() {
         _count: { type: true }
       }),
 
-      // Get user statistics
-      prisma.user.aggregate({
-        where: { isApproved: true },
-        _count: { id: true },
-        _groupBy: ['jenisKelamin']
-      }),
-
       // Get blood stock
       prisma.bloodStock.findMany({
         select: { type: true, quantity: true }
@@ -43,7 +35,8 @@ export async function GET() {
       activeIncidents: { disaster: 0, ambulance: 0 },
       fleet: { ambulance: 0, motor: 0, operational: 0 },
       personnel: { total: 0, male: 0, female: 0 },
-      bloodStock: {}
+      bloodStock: {},
+      beneficiaries: { disaster: 0, ambulance: 0 }
     }
 
     // Process incidents
@@ -72,26 +65,24 @@ export async function GET() {
       })
     }
 
-    // Process users - Note: This needs to be adjusted for Prisma's aggregation
-    if (usersResult.status === 'fulfilled') {
-      try {
-        // Get total count
-        const totalUsers = await prisma.user.count({ where: { isApproved: true } })
-        stats.personnel.total = totalUsers
+    // Process users
+    try {
+      // Get total count
+      const totalUsers = await prisma.user.count({ where: { isApproved: true } })
+      stats.personnel.total = totalUsers
 
-        // Get gender counts
-        const maleCount = await prisma.user.count({
-          where: { isApproved: true, jenisKelamin: 'Laki-laki' }
-        })
-        const femaleCount = await prisma.user.count({
-          where: { isApproved: true, jenisKelamin: 'Perempuan' }
-        })
+      // Get gender counts
+      const maleCount = await prisma.user.count({
+        where: { isApproved: true, jenisKelamin: 'Laki-laki' }
+      })
+      const femaleCount = await prisma.user.count({
+        where: { isApproved: true, jenisKelamin: 'Perempuan' }
+      })
 
-        stats.personnel.male = maleCount
-        stats.personnel.female = femaleCount
-      } catch (error) {
-        console.warn('Failed to get user statistics:', error.message)
-      }
+      stats.personnel.male = maleCount
+      stats.personnel.female = femaleCount
+    } catch (error) {
+      console.warn('Failed to get user statistics:', error.message)
     }
 
     // Process blood stock
@@ -102,21 +93,21 @@ export async function GET() {
       })
     }
 
-    // Calculate beneficiaries from incidents (optimized)
+    // Calculate beneficiaries from incidents (count assessments by type)
     try {
-      const beneficiaryStats = await prisma.assessment.aggregate({
-        _sum: { jumlahKorban: true },
+      const assessmentStats = await prisma.assessment.groupBy({
+        by: ['type'],
+        _count: true,
         where: {
           incident: { status: 'active' }
-        },
-        _groupBy: ['type']
+        }
       })
 
-      beneficiaryStats.forEach(stat => {
+      assessmentStats.forEach(stat => {
         if (stat.type === 'bencana') {
-          stats.beneficiaries.disaster = stat._sum.jumlahKorban || 0
+          stats.beneficiaries.disaster = stat._count || 0
         } else if (stat.type === 'ambulance') {
-          stats.beneficiaries.ambulance = stat._sum.jumlahKorban || 0
+          stats.beneficiaries.ambulance = stat._count || 0
         }
       })
     } catch (error) {
