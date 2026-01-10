@@ -40,10 +40,14 @@ export default function ManajemenSDM() {
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear())
 
   // React Query hooks for users data and mutations
-  const { data: users = [], isLoading: usersLoading } = useUsers()
+  const { data: allUsers = [], isLoading: usersLoading } = useUsers({ approved: null }) // Fetch all users
   const createUserMutation = useCreateUser()
   const deleteUserMutation = useDeleteUser()
   const updateUserMutation = useUpdateUser()
+
+  // Separate approved and unapproved users
+  const users = allUsers.filter(user => user.isApproved)
+  const unapprovedUsers = allUsers.filter(user => !user.isApproved)
 
   const navigateMonth = (direction) => {
     let newMonth = currentMonth + direction
@@ -829,7 +833,7 @@ export default function ManajemenSDM() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {users.filter(user => !user.isApproved).map((user) => (
+                  {unapprovedUsers.map((user) => (
                     <TableRow key={user.id}>
                       <TableCell className="font-medium">{user.namaLengkap}</TableCell>
                       <TableCell>{user.email}</TableCell>
@@ -860,7 +864,7 @@ export default function ManajemenSDM() {
                   ))}
                 </TableBody>
               </Table>
-              {users.filter(user => !user.isApproved).length === 0 && (
+              {unapprovedUsers.length === 0 && (
                 <div className="text-center py-8 text-gray-500">
                   Tidak ada akun yang menunggu persetujuan
                 </div>
