@@ -296,31 +296,19 @@ export default function ManajemenSDM() {
 
   const handleApproveUser = async (userId) => {
     try {
-      const response = await fetch(`/api/users/${userId}/approve`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isApproved: true })
+      await updateUserMutation.mutateAsync({
+        userId: userId,
+        data: { isApproved: true }
       })
-
-      if (response.ok) {
-        toast({
-          title: "Berhasil!",
-          description: "Akun berhasil disetujui!",
-          duration: 3000,
-        })
-        fetchData()
-      } else {
-        toast({
-          title: "Error",
-          description: "Gagal menyetujui akun",
-          variant: "destructive",
-          duration: 3000,
-        })
-      }
+      toast({
+        title: "Berhasil!",
+        description: "Akun berhasil disetujui!",
+        duration: 3000,
+      })
     } catch (error) {
       toast({
         title: "Error",
-        description: "Terjadi kesalahan jaringan.",
+        description: error.message || "Gagal menyetujui akun",
         variant: "destructive",
         duration: 3000,
       })

@@ -160,9 +160,12 @@ export function AppSidebar({ ...props }) {
     const userRole = userData?.role
     const isAdminOrKoordinator = userRole === 'Admin' || userRole === 'Koordinator'
 
+    console.log('Sidebar - User role:', userRole, 'Is admin/koordinator:', isAdminOrKoordinator)
+
     return data.navMain.filter(item => {
       // Hide "Manajemen SDM" from Petugas
       if (item.title === "Manajemen SDM" && !isAdminOrKoordinator) {
+        console.log('Sidebar - Hiding Manajemen SDM menu for role:', userRole)
         return false
       }
       return true
