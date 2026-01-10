@@ -49,6 +49,12 @@ export default function ManajemenSDM() {
   const users = allUsers.filter(user => user.isApproved)
   const unapprovedUsers = allUsers.filter(user => !user.isApproved)
 
+  // Debug logging
+  console.log('All users:', allUsers.length)
+  console.log('Approved users:', users.length)
+  console.log('Unapproved users:', unapprovedUsers.length)
+  console.log('Unapproved users data:', unapprovedUsers)
+
   const navigateMonth = (direction) => {
     let newMonth = currentMonth + direction
     let newYear = currentYear

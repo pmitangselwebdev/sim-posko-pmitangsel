@@ -10,9 +10,8 @@ const STATIC_ASSETS = [
   '/login',
   '/register',
   '/dashboard',
-  '/offline',
-  '/manifest.json',
-  // CSS and JS bundles will be added automatically
+  // Note: /offline and /manifest.json are not cached to avoid errors
+  // CSS and JS bundles will be added automatically during runtime
 ]
 
 // API endpoints to cache
