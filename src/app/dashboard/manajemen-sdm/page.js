@@ -827,35 +827,39 @@ export default function ManajemenSDM() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {unapprovedUsers.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell className="font-medium">{user.namaLengkap}</TableCell>
-                      <TableCell>{user.email}</TableCell>
-                      <TableCell>{user.spesialisasi}</TableCell>
-                      <TableCell>{new Date(user.createdAt).toLocaleDateString("id-ID")}</TableCell>
-                      <TableCell>
-                        <Badge variant="secondary">Menunggu Persetujuan</Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            onClick={() => handleApproveUser(user.id)}
-                            className="bg-green-600 hover:bg-green-700"
-                          >
-                            Setujui
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => handleRejectUser(user.id)}
-                          >
-                            Tolak
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {console.log('Rendering unapproved users table:', unapprovedUsers)}
+                  {unapprovedUsers.map((user) => {
+                    console.log('Rendering user:', user.id, user.namaLengkap, user.isApproved)
+                    return (
+                      <TableRow key={user.id}>
+                        <TableCell className="font-medium">{user.namaLengkap}</TableCell>
+                        <TableCell>{user.email}</TableCell>
+                        <TableCell>{user.spesialisasi}</TableCell>
+                        <TableCell>{new Date(user.createdAt).toLocaleDateString("id-ID")}</TableCell>
+                        <TableCell>
+                          <Badge variant="secondary">Menunggu Persetujuan</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              onClick={() => handleApproveUser(user.id)}
+                              className="bg-green-600 hover:bg-green-700"
+                            >
+                              Setujui
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleRejectUser(user.id)}
+                            >
+                              Tolak
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
                 </TableBody>
               </Table>
               {unapprovedUsers.length === 0 && (
