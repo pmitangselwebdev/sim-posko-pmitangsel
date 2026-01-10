@@ -42,8 +42,13 @@ export function useUsers(options = {}) {
       const params = new URLSearchParams({
         page: page.toString(),
         limit: limit.toString(),
-        approved: approved.toString(),
       })
+
+      // Only add approved parameter if it's not null
+      if (approved !== null) {
+        params.append('approved', approved.toString())
+      }
+
       const response = await fetch(`/api/users?${params}`)
       if (!response.ok) {
         throw new Error('Failed to fetch users')

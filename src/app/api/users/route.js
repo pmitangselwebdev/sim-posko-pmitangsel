@@ -1,13 +1,27 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 
-export async function GET() {
+export async function GET(request) {
   try {
     console.log("Attempting to fetch users from database...")
 
+    const { searchParams } = new URL(request.url)
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '1000')
+    const approvedParam = searchParams.get('approved')
+
+    // Determine filter based on approved parameter
+    let whereClause = {}
+    if (approvedParam === 'true') {
+      whereClause = { isApproved: true }
+    } else if (approvedParam === 'false') {
+      whereClause = { isApproved: false }
+    }
+    // If approvedParam is 'null' or not provided, fetch all users
+
     // Use a more efficient query that only selects needed fields
     const users = await prisma.user.findMany({
-      where: { isApproved: true }, // Only approved users for dashboard
+      where: whereClause,
       select: {
         id: true,
         namaLengkap: true,
@@ -25,11 +39,11 @@ export async function GET() {
         updatedAt: true
       },
       orderBy: { createdAt: "desc" },
-      // Limit for performance - dashboard doesn't need all users
-      take: 1000
+      skip: (page - 1) * limit,
+      take: limit
     })
 
-    console.log(`Successfully fetched ${users.length} users`)
+    console.log(`Successfully fetched ${users.length} users (approved filter: ${approvedParam})`)
     return NextResponse.json(users)
   } catch (error) {
     console.error("Error fetching users:", error)
