@@ -523,7 +523,7 @@ export default function PetugasPosko() {
                     {activeIncidents.length === 0 && (
                       <TableRow>
                         <TableCell colSpan="5" className="text-center py-8 text-muted-foreground">
-                          Tidak ada insiden aktif saat ini. Insiden akan muncul setelah diinisiasi dari tab "Inisiasi Kejadian".
+                          Tidak ada insiden aktif saat ini. Insiden akan muncul setelah diinisiasi dari tab &ldquo;Inisiasi Kejadian&rdquo;.
                         </TableCell>
                       </TableRow>
                     )}
@@ -592,7 +592,7 @@ export default function PetugasPosko() {
                 ))}
                 {activeIncidents.length === 0 && (
                   <div className="text-center py-8 text-muted-foreground">
-                    Tidak ada insiden aktif saat ini. Insiden akan muncul setelah diinisiasi dari tab "Inisiasi Kejadian".
+                    Tidak ada insiden aktif saat ini. Insiden akan muncul setelah diinisiasi dari tab &ldquo;Inisiasi Kejadian&rdquo;.
                   </div>
                 )}
               </div>
