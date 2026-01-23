@@ -17,6 +17,8 @@ const assessmentSchema = z.object({
   jenisBencana: z.enum(["Banjir", "Longsor", "Kebakaran", "Konflik"]),
   waktuKejadian: z.string().min(1, "Waktu kejadian wajib diisi"),
   lokasi: z.string().min(1, "Lokasi wajib diisi"),
+  latitude: z.string().optional(),
+  longitude: z.string().optional(),
   namaPetugas: z.string().min(1, "Nama petugas wajib diisi"),
   jumlahKorbanMeninggal: z.string(),
   jumlahKorbanLukaBerat: z.string(),
@@ -57,6 +59,9 @@ export default function Assessment() {
   const [assessmentType, setAssessmentType] = useState("bencana")
   const [pengungsi, setPengungsi] = useState("tidak")
   const [kontak, setKontak] = useState([{ nama: "", jabatan: "", nomorTelepon: "" }])
+  const [isGettingLocation, setIsGettingLocation] = useState(false)
+  const [showMinimap, setShowMinimap] = useState(false)
+  const [currentCoords, setCurrentCoords] = useState(null)
 
   const form = useForm({
     resolver: zodResolver(assessmentSchema),
@@ -64,6 +69,8 @@ export default function Assessment() {
       jenisBencana: "",
       waktuKejadian: "",
       lokasi: "",
+      latitude: "",
+      longitude: "",
       namaPetugas: "",
       jumlahKorbanMeninggal: "",
       jumlahKorbanLukaBerat: "",
@@ -118,6 +125,36 @@ export default function Assessment() {
     setKontak([...kontak, { nama: "", jabatan: "", nomorTelepon: "" }])
   }
 
+  const getCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by this browser.")
+      return
+    }
+
+    setIsGettingLocation(true)
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords
+        form.setValue("latitude", latitude.toString())
+        form.setValue("longitude", longitude.toString())
+        setCurrentCoords({ lat: latitude, lng: longitude })
+        setShowMinimap(true)
+        setIsGettingLocation(false)
+      },
+      (error) => {
+        console.error("Error getting location:", error)
+        alert("Error getting location: " + error.message)
+        setIsGettingLocation(false)
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 300000 // 5 minutes
+      }
+    )
+  }
+
   // Only render components after hydration to prevent classList errors
   if (!mounted) {
     return (
@@ -159,8 +196,8 @@ export default function Assessment() {
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <div>
-                  <h3 className="text-lg font-semibold mb-4">Gambaran Umum Bencana</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Gambaran Umum Bencana</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <FormField
                     control={form.control}
                     name="jenisBencana"
@@ -210,6 +247,65 @@ export default function Assessment() {
                       </FormItem>
                     )}
                   />
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Koordinat Lokasi</Label>
+                    <div className="flex gap-2">
+                      <FormField
+                        control={form.control}
+                        name="latitude"
+                        render={({ field }) => (
+                          <FormItem className="flex-1">
+                            <FormControl>
+                              <Input placeholder="Latitude" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="longitude"
+                        render={({ field }) => (
+                          <FormItem className="flex-1">
+                            <FormControl>
+                              <Input placeholder="Longitude" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={getCurrentLocation}
+                        disabled={isGettingLocation}
+                        className="px-3"
+                      >
+                        {isGettingLocation ? "📍..." : "📍"}
+                      </Button>
+                    </div>
+                    <p className="text-xs text-gray-500">Klik ikon lokasi untuk mendapatkan koordinat saat ini</p>
+
+                    {/* Minimap Preview */}
+                    {showMinimap && currentCoords && (
+                      <div className="mt-4">
+                        <Label className="text-sm font-medium mb-2 block">Preview Lokasi</Label>
+                        <div className="border rounded-lg overflow-hidden" style={{ height: '200px', width: '100%' }}>
+                          <iframe
+                            width="100%"
+                            height="100%"
+                            frameBorder="0"
+                            style={{ border: 0 }}
+                            src={`https://www.openstreetmap.org/export/embed.html?bbox=${currentCoords.lng - 0.01},${currentCoords.lat - 0.01},${currentCoords.lng + 0.01},${currentCoords.lat + 0.01}&layer=mapnik&marker=${currentCoords.lat},${currentCoords.lng}`}
+                            allowFullScreen
+                          />
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">
+                          Koordinat: {currentCoords.lat.toFixed(6)}, {currentCoords.lng.toFixed(6)}
+                        </p>
+                      </div>
+                    )}
+                  </div>
                   <FormField
                     control={form.control}
                     name="namaPetugas"

@@ -51,6 +51,7 @@ export async function PUT(request, { params }) {
         role: body.role,
         subRole: body.subRole,
         status: body.status,
+        isApproved: body.isApproved,
         updatedAt: new Date()
       },
       select: {

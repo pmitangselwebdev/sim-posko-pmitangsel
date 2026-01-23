@@ -175,18 +175,18 @@ export function AppSidebar({ ...props }) {
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <div className="flex flex-col items-center space-y-3 p-6 border-b border-sidebar-border">
-          <Avatar className="h-20 w-20">
+        <div className="flex flex-col items-center space-y-2 sm:space-y-3 p-4 sm:p-6 border-b border-sidebar-border">
+          <Avatar className="h-16 w-16 sm:h-20 sm:w-20">
             <AvatarImage
               src={userData?.foto || "/images/default-profile-picture.png"}
               alt="Profile Picture"
             />
-            <AvatarFallback className="text-xl">
+            <AvatarFallback className="text-lg sm:text-xl">
               {userData?.namaLengkap?.charAt(0) || clerkUser?.firstName?.charAt(0) || "U"}
             </AvatarFallback>
           </Avatar>
           <div className="text-center">
-            <p className="text-sm font-medium text-sidebar-foreground">
+            <p className="text-xs sm:text-sm font-medium text-sidebar-foreground">
               Halo, {userData?.namaLengkap || clerkUser?.firstName || "User"}
             </p>
             <p className="text-xs text-sidebar-foreground/70">

@@ -450,6 +450,18 @@ export default function ManajemenSDM() {
   }
 
   // Show loading while checking access
+  if (hasAccess === null) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Memeriksa izin akses...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Show access denied only after access check is complete and user doesn't have access
   if (hasAccess === false) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -457,18 +469,6 @@ export default function ManajemenSDM() {
           <h2 className="text-2xl font-bold text-red-600 mb-2">Akses Ditolak</h2>
           <p className="text-gray-600">Anda tidak memiliki izin untuk mengakses halaman ini.</p>
           <p className="text-sm text-gray-500 mt-2">Hanya Admin dan Koordinator yang dapat mengakses Manajemen SDM.</p>
-        </div>
-      </div>
-    )
-  }
-
-  // Show loading while checking access
-  if (hasAccess === null) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Memeriksa izin akses...</p>
         </div>
       </div>
     )

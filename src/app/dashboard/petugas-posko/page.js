@@ -354,13 +354,15 @@ export default function PetugasPosko() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-          <TabsTrigger value="incidents">Insiden Aktif</TabsTrigger>
-          <TabsTrigger value="vehicles">Kendaraan</TabsTrigger>
-          <TabsTrigger value="reports">Laporan</TabsTrigger>
-          <TabsTrigger value="initiate">Inisiasi Kejadian</TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto">
+          <TabsList className="grid w-full min-w-max grid-cols-5 h-auto p-1">
+            <TabsTrigger value="dashboard" className="text-xs sm:text-sm px-2 sm:px-3 py-2">Dashboard</TabsTrigger>
+            <TabsTrigger value="incidents" className="text-xs sm:text-sm px-2 sm:px-3 py-2">Insiden Aktif</TabsTrigger>
+            <TabsTrigger value="vehicles" className="text-xs sm:text-sm px-2 sm:px-3 py-2">Kendaraan</TabsTrigger>
+            <TabsTrigger value="reports" className="text-xs sm:text-sm px-2 sm:px-3 py-2">Laporan</TabsTrigger>
+            <TabsTrigger value="initiate" className="text-xs sm:text-sm px-2 sm:px-3 py-2">Inisiasi Kejadian</TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="dashboard" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -443,7 +445,7 @@ export default function PetugasPosko() {
 
         <TabsContent value="incidents" className="space-y-4">
           <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-bold">Insiden Aktif</h2>
+            <h2 className="text-xl sm:text-2xl font-bold">Insiden Aktif</h2>
           </div>
 
           <Card>
@@ -454,77 +456,146 @@ export default function PetugasPosko() {
               </p>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Jenis</TableHead>
-                    <TableHead>Lokasi</TableHead>
-                    <TableHead>Waktu</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Aksi</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {activeIncidents.map((incident) => (
-                    <TableRow key={incident.id}>
-                      <TableCell>{incident.type}</TableCell>
-                      <TableCell>{incident.location}</TableCell>
-                      <TableCell>{new Date(incident.date).toLocaleString("id-ID")}</TableCell>
-                      <TableCell>
-                        <Badge variant="destructive">
-                          Aktif
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleViewIncident(incident)}
-                          >
-                            Lihat
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEditIncident(incident)}
-                          >
-                            Edit
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="destructive" size="sm">
-                                Hapus
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Hapus Insiden</AlertDialogTitle>
+              {/* Desktop Table View */}
+              <div className="hidden md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Jenis</TableHead>
+                      <TableHead>Lokasi</TableHead>
+                      <TableHead>Waktu</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Aksi</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {activeIncidents.map((incident) => (
+                      <TableRow key={incident.id}>
+                        <TableCell>{incident.type}</TableCell>
+                        <TableCell>{incident.location}</TableCell>
+                        <TableCell>{new Date(incident.date).toLocaleString("id-ID")}</TableCell>
+                        <TableCell>
+                          <Badge variant="destructive">
+                            Aktif
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleViewIncident(incident)}
+                            >
+                              Lihat
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEditIncident(incident)}
+                            >
+                              Edit
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="destructive" size="sm">
+                                  Hapus
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Hapus Insiden</AlertDialogTitle>
                                 <AlertDialogDescription>
                                   Apakah Anda yakin ingin menghapus insiden ini? Tindakan ini tidak dapat dibatalkan.
                                 </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Batal</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleDeleteIncident(incident.id)}>
-                                  Hapus
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Batal</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleDeleteIncident(incident.id)}>
+                                    Hapus
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {activeIncidents.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan="5" className="text-center py-8 text-muted-foreground">
+                          Tidak ada insiden aktif saat ini. Insiden akan muncul setelah diinisiasi dari tab "Inisiasi Kejadian".
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Mobile Card View */}
+              <div className="md:hidden space-y-3">
+                {activeIncidents.map((incident) => (
+                  <Card key={incident.id} className="p-4">
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-semibold text-sm">{incident.type}</h3>
+                          <p className="text-xs text-muted-foreground">{incident.location}</p>
                         </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {activeIncidents.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan="5" className="text-center py-8 text-muted-foreground">
-                        Tidak ada insiden aktif saat ini. Insiden akan muncul setelah diinisiasi dari tab &quot;Inisiasi Kejadian&quot;.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+                        <Badge variant="destructive" className="text-xs">
+                          Aktif
+                        </Badge>
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {new Date(incident.date).toLocaleString("id-ID")}
+                      </div>
+                      <div className="flex gap-2 pt-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 text-xs"
+                          onClick={() => handleViewIncident(incident)}
+                        >
+                          Lihat
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 text-xs"
+                          onClick={() => handleEditIncident(incident)}
+                        >
+                          Edit
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="destructive" size="sm" className="flex-1 text-xs">
+                              Hapus
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Hapus Insiden</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Apakah Anda yakin ingin menghapus insiden ini? Tindakan ini tidak dapat dibatalkan.
+                            </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Batal</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDeleteIncident(incident.id)}>
+                                Hapus
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+                {activeIncidents.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Tidak ada insiden aktif saat ini. Insiden akan muncul setelah diinisiasi dari tab "Inisiasi Kejadian".
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
