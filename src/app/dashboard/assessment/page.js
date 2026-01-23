@@ -226,12 +226,12 @@ export default function Assessment() {
           </p>
         </CardHeader>
         <CardContent>
-          <Select value={selectedIncidentId} onValueChange={setSelectedIncidentId}>
+          <Select value={selectedIncidentId || "none"} onValueChange={(value) => setSelectedIncidentId(value === "none" ? "" : value)}>
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Pilih insiden aktif (opsional)" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Tidak dihubungkan ke insiden</SelectItem>
+              <SelectItem value="none">Tidak dihubungkan ke insiden</SelectItem>
               {incidents.map((incident) => (
                 <SelectItem key={incident.id} value={incident.id}>
                   {incident.type} - {incident.location} ({new Date(incident.date).toLocaleDateString("id-ID")})
