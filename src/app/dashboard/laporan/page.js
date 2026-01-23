@@ -131,6 +131,266 @@ export default function InsidenKejadianDarurat() {
     }
   }
 
+  // Assessment Card Component
+  const AssessmentCard = ({ assessment, index }) => (
+    <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
+      <div className="flex justify-between items-start mb-3">
+        <div>
+          <h4 className="font-medium text-sm">
+            Assessment #{index + 1} - {assessment.type === 'bencana' ? 'Bencana' : 'Ambulance'}
+          </h4>
+          <p className="text-xs text-muted-foreground">
+            Oleh: {assessment.user?.namaLengkap || 'Petugas'} |
+            {new Date(assessment.createdAt).toLocaleString("id-ID")}
+          </p>
+          {assessment.incidentId && (
+            <p className="text-xs text-blue-600 mt-1">
+              🔗 Terhubung dengan insiden
+            </p>
+          )}
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            try {
+              const pdf = generateReportPDF(assessment.data, 'assessment-report')
+              downloadPDF(pdf, `assessment-${assessment.id}.pdf`)
+            } catch (error) {
+              alert("Gagal membuat PDF")
+            }
+          }}
+        >
+          Export PDF
+        </Button>
+      </div>
+
+      {assessment.type === "bencana" && assessment.data && (
+        <div className="space-y-4">
+          {/* Basic Info */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="font-medium">Jenis Bencana:</span> {assessment.data.jenisBencana || '-'}
+            </div>
+            <div>
+              <span className="font-medium">Lokasi:</span> {assessment.data.lokasi || '-'}
+            </div>
+            <div>
+              <span className="font-medium">Petugas:</span> {assessment.data.namaPetugas || '-'}
+            </div>
+            <div>
+              <span className="font-medium">Waktu:</span> {assessment.data.waktuKejadian ? new Date(assessment.data.waktuKejadian).toLocaleString("id-ID") : '-'}
+            </div>
+            {assessment.data.latitude && assessment.data.longitude && (
+              <div className="col-span-2">
+                <span className="font-medium">Koordinat:</span> {assessment.data.latitude}, {assessment.data.longitude}
+              </div>
+            )}
+          </div>
+
+          {/* Casualty Metrics */}
+          <div>
+            <h5 className="font-medium text-sm mb-2">📊 Data Korban</h5>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="bg-red-50 dark:bg-red-900/20 p-3 rounded border border-red-200 dark:border-red-800">
+                <div className="font-bold text-red-600 text-lg">{assessment.data.jumlahKorbanMeninggal || 0}</div>
+                <div className="text-xs text-muted-foreground">Meninggal</div>
+              </div>
+              <div className="bg-orange-50 dark:bg-orange-900/20 p-3 rounded border border-orange-200 dark:border-orange-800">
+                <div className="font-bold text-orange-600 text-lg">{assessment.data.jumlahKorbanLukaBerat || 0}</div>
+                <div className="text-xs text-muted-foreground">Luka Berat</div>
+              </div>
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded border border-yellow-200 dark:border-yellow-800">
+                <div className="font-bold text-yellow-600 text-lg">{assessment.data.jumlahKorbanLukaRingan || 0}</div>
+                <div className="text-xs text-muted-foreground">Luka Ringan</div>
+              </div>
+              <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded border border-blue-200 dark:border-blue-800">
+                <div className="font-bold text-blue-600 text-lg">{assessment.data.jumlahKorbanHilang || 0}</div>
+                <div className="text-xs text-muted-foreground">Hilang</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Damage Assessment */}
+          {(assessment.data.rumahRusakBerat || assessment.data.rumahRusakRingan) && (
+            <div>
+              <h5 className="font-medium text-sm mb-2">🏠 Kerusakan Infrastruktur</h5>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-purple-50 dark:bg-purple-900/20 p-3 rounded border border-purple-200 dark:border-purple-800">
+                  <div className="font-bold text-purple-600 text-lg">{assessment.data.rumahRusakBerat || 0}</div>
+                  <div className="text-xs text-muted-foreground">Rumah Rusak Berat</div>
+                </div>
+                <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded border border-green-200 dark:border-green-800">
+                  <div className="font-bold text-green-600 text-lg">{assessment.data.rumahRusakRingan || 0}</div>
+                  <div className="text-xs text-muted-foreground">Rumah Rusak Ringan</div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Evacuation Info */}
+          {assessment.data.pengungsi === "ada" && (
+            <div>
+              <h5 className="font-medium text-sm mb-2">🏕️ Data Pengungsi</h5>
+              <div className="bg-indigo-50 dark:bg-indigo-900/20 p-3 rounded border border-indigo-200 dark:border-indigo-800">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="font-medium">Lokasi Pengungsian:</span> {assessment.data.lokasiPengungsian || '-'}
+                  </div>
+                  <div>
+                    <span className="font-medium">Jumlah:</span> {assessment.data.jumlahPengungsi || 0} orang
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Infrastructure Status */}
+          <div>
+            <h5 className="font-medium text-sm mb-2">🏗️ Status Infrastruktur</h5>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
+              <div className={`p-2 rounded ${assessment.data.jalan === 'Berfungsi' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                Jalan: {assessment.data.jalan || 'Tidak diketahui'}
+              </div>
+              <div className={`p-2 rounded ${assessment.data.jembatan === 'Berfungsi' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                Jembatan: {assessment.data.jembatan || 'Tidak diketahui'}
+              </div>
+              <div className={`p-2 rounded ${assessment.data.kendaraanUmum === 'Berfungsi' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                Kendaraan Umum: {assessment.data.kendaraanUmum || 'Tidak diketahui'}
+              </div>
+              <div className={`p-2 rounded ${assessment.data.listrik === 'Berfungsi' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                Listrik: {assessment.data.listrik || 'Tidak diketahui'}
+              </div>
+              <div className={`p-2 rounded ${assessment.data.air === 'Berfungsi' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                Air: {assessment.data.air || 'Tidak diketahui'}
+              </div>
+              <div className={`p-2 rounded ${assessment.data.internet === 'Berfungsi' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                Internet: {assessment.data.internet || 'Tidak diketahui'}
+              </div>
+            </div>
+          </div>
+
+          {/* Situation Description */}
+          {assessment.data.situasiKeamanan && (
+            <div>
+              <h5 className="font-medium text-sm mb-2">🛡️ Situasi Keamanan</h5>
+              <div className="bg-gray-100 dark:bg-gray-800 p-3 rounded text-sm">
+                {assessment.data.situasiKeamanan}
+              </div>
+            </div>
+          )}
+
+          {/* Actions Taken */}
+          {(assessment.data.tindakanPMI || assessment.data.tindakanInstansiLain) && (
+            <div>
+              <h5 className="font-medium text-sm mb-2">🚀 Tindakan yang Telah Dilakukan</h5>
+              <div className="space-y-2">
+                {assessment.data.tindakanPMI && (
+                  <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded border border-blue-200 dark:border-blue-800">
+                    <div className="font-medium text-xs text-blue-600 mb-1">PMI:</div>
+                    <div className="text-sm">{assessment.data.tindakanPMI}</div>
+                  </div>
+                )}
+                {assessment.data.tindakanInstansiLain && (
+                  <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded border border-green-200 dark:border-green-800">
+                    <div className="font-medium text-xs text-green-600 mb-1">Instansi Lain:</div>
+                    <div className="text-sm">{assessment.data.tindakanInstansiLain}</div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Needs */}
+          {(assessment.data.kebutuhanPMI || assessment.data.kebutuhanKorban) && (
+            <div>
+              <h5 className="font-medium text-sm mb-2">📋 Kebutuhan Mendesak</h5>
+              <div className="space-y-2">
+                {assessment.data.kebutuhanPMI && (
+                  <div className="bg-red-50 dark:bg-red-900/20 p-3 rounded border border-red-200 dark:border-red-800">
+                    <div className="font-medium text-xs text-red-600 mb-1">PMI:</div>
+                    <div className="text-sm">{assessment.data.kebutuhanPMI}</div>
+                  </div>
+                )}
+                {assessment.data.kebutuhanKorban && (
+                  <div className="bg-orange-50 dark:bg-orange-900/20 p-3 rounded border border-orange-200 dark:border-orange-800">
+                    <div className="font-medium text-xs text-orange-600 mb-1">Korban:</div>
+                    <div className="text-sm">{assessment.data.kebutuhanKorban}</div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {assessment.type === "ambulance" && assessment.data && (
+        <div className="space-y-4">
+          {/* Basic Ambulance Info */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="font-medium">Lokasi:</span> {assessment.data.lokasi || '-'}
+            </div>
+            <div>
+              <span className="font-medium">Petugas:</span> {assessment.data.namaPetugas || '-'}
+            </div>
+            <div>
+              <span className="font-medium">Waktu:</span> {assessment.data.waktuKejadian ? new Date(assessment.data.waktuKejadian).toLocaleString("id-ID") : '-'}
+            </div>
+            <div>
+              <span className="font-medium">Jenis Kejadian:</span> {assessment.data.jenisKejadian || '-'}
+            </div>
+          </div>
+
+          {/* Ambulance Casualty Metrics */}
+          <div>
+            <h5 className="font-medium text-sm mb-2">🚑 Data Korban Ambulance</h5>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="bg-red-50 dark:bg-red-900/20 p-3 rounded border border-red-200 dark:border-red-800">
+                <div className="font-bold text-red-600 text-lg">{assessment.data.jumlahKorban || 0}</div>
+                <div className="text-xs text-muted-foreground">Total Korban</div>
+              </div>
+              <div className="bg-orange-50 dark:bg-orange-900/20 p-3 rounded border border-orange-200 dark:border-orange-800">
+                <div className="font-bold text-orange-600 text-lg">{assessment.data.jumlahKorbanLukaBerat || 0}</div>
+                <div className="text-xs text-muted-foreground">Luka Berat</div>
+              </div>
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded border border-yellow-200 dark:border-yellow-800">
+                <div className="font-bold text-yellow-600 text-lg">{assessment.data.jumlahKorbanLukaRingan || 0}</div>
+                <div className="text-xs text-muted-foreground">Luka Ringan</div>
+              </div>
+              <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded border border-blue-200 dark:border-blue-800">
+                <div className="font-bold text-blue-600 text-lg">{assessment.data.jumlahKorbanMeninggal || 0}</div>
+                <div className="text-xs text-muted-foreground">Meninggal</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Ambulance Actions & Needs */}
+          {(assessment.data.tindakanYangDilakukan || assessment.data.kebutuhanTambahan) && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {assessment.data.tindakanYangDilakukan && (
+                <div>
+                  <h5 className="font-medium text-sm mb-2">✅ Tindakan Dilakukan</h5>
+                  <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded border border-green-200 dark:border-green-800 text-sm">
+                    {assessment.data.tindakanYangDilakukan}
+                  </div>
+                </div>
+              )}
+              {assessment.data.kebutuhanTambahan && (
+                <div>
+                  <h5 className="font-medium text-sm mb-2">📋 Kebutuhan Tambahan</h5>
+                  <div className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded border border-yellow-200 dark:border-yellow-800 text-sm">
+                    {assessment.data.kebutuhanTambahan}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+
   // Only render components after hydration to prevent classList errors
   if (!mounted) {
     return (
@@ -239,132 +499,72 @@ export default function InsidenKejadianDarurat() {
             <CardHeader>
               <CardTitle>Data Assessment Lengkap</CardTitle>
               <p className="text-sm text-muted-foreground">
-                Ringkasan semua data assessment yang telah dikumpulkan, dikelompokkan berdasarkan insiden
+                Semua data assessment yang telah dikumpulkan dari database, ditampilkan secara lengkap
               </p>
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
-                {incidents.map((incident) => {
-                  const incidentAssessments = assessments.filter(assessment => assessment.incidentId === incident.id)
+                {/* Linked Assessments (grouped by incidents) */}
+                {incidents.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4 text-blue-600">📎 Assessment Terhubung dengan Insiden</h3>
+                    {incidents.map((incident) => {
+                      const incidentAssessments = assessments.filter(assessment => assessment.incidentId === incident.id)
 
-                  return (
-                    <div key={incident.id} className="border rounded-lg p-4">
-                      <div className="flex justify-between items-start mb-4">
-                        <div>
-                          <h3 className="font-semibold text-lg">{incident.type}</h3>
-                          <p className="text-sm text-muted-foreground">{incident.location}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {new Date(incident.date).toLocaleString("id-ID")}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {getStatusBadge(incident.status)}
-                          <Badge variant="outline" className="text-xs">
-                            {incidentAssessments.length} Assessment
-                          </Badge>
-                        </div>
-                      </div>
+                      if (incidentAssessments.length === 0) return null
 
-                      {incidentAssessments.length > 0 ? (
-                        <div className="space-y-4">
-                          {incidentAssessments.map((assessment, index) => (
-                            <div key={assessment.id} className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
-                              <div className="flex justify-between items-start mb-3">
-                                <div>
-                                  <h4 className="font-medium text-sm">
-                                    Assessment #{index + 1} - {assessment.type === 'bencana' ? 'Bencana' : 'Ambulance'}
-                                  </h4>
-                                  <p className="text-xs text-muted-foreground">
-                                    Oleh: {assessment.user?.namaLengkap || 'Petugas'} |
-                                    {new Date(assessment.createdAt).toLocaleString("id-ID")}
-                                  </p>
-                                </div>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => {
-                                    try {
-                                      const pdf = generateReportPDF(assessment.data, 'assessment-report')
-                                      downloadPDF(pdf, `assessment-${assessment.id}.pdf`)
-                                    } catch (error) {
-                                      alert("Gagal membuat PDF")
-                                    }
-                                  }}
-                                >
-                                  Export PDF
-                                </Button>
-                              </div>
-
-                              {assessment.type === "bencana" && assessment.data && (
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                                  <div className="bg-white dark:bg-gray-800 p-3 rounded border">
-                                    <div className="font-medium text-red-600">{assessment.data.jumlahKorbanMeninggal || 0}</div>
-                                    <div className="text-xs text-muted-foreground">Meninggal</div>
-                                  </div>
-                                  <div className="bg-white dark:bg-gray-800 p-3 rounded border">
-                                    <div className="font-medium text-orange-600">{assessment.data.jumlahKorbanLukaBerat || 0}</div>
-                                    <div className="text-xs text-muted-foreground">Luka Berat</div>
-                                  </div>
-                                  <div className="bg-white dark:bg-gray-800 p-3 rounded border">
-                                    <div className="font-medium text-yellow-600">{assessment.data.jumlahKorbanLukaRingan || 0}</div>
-                                    <div className="text-xs text-muted-foreground">Luka Ringan</div>
-                                  </div>
-                                  <div className="bg-white dark:bg-gray-800 p-3 rounded border">
-                                    <div className="font-medium text-blue-600">{assessment.data.jumlahKorbanHilang || 0}</div>
-                                    <div className="text-xs text-muted-foreground">Hilang</div>
-                                  </div>
-                                  <div className="bg-white dark:bg-gray-800 p-3 rounded border">
-                                    <div className="font-medium text-purple-600">{assessment.data.rumahRusakBerat || 0}</div>
-                                    <div className="text-xs text-muted-foreground">Rumah Rusak Berat</div>
-                                  </div>
-                                  <div className="bg-white dark:bg-gray-800 p-3 rounded border">
-                                    <div className="font-medium text-green-600">{assessment.data.rumahRusakRingan || 0}</div>
-                                    <div className="text-xs text-muted-foreground">Rumah Rusak Ringan</div>
-                                  </div>
-                                  <div className="bg-white dark:bg-gray-800 p-3 rounded border col-span-2">
-                                    <div className="font-medium text-gray-600">{assessment.data.jenisBencana || '-'}</div>
-                                    <div className="text-xs text-muted-foreground">Jenis Bencana</div>
-                                  </div>
-                                </div>
-                              )}
-
-                              {assessment.type === "ambulance" && assessment.data && (
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                                  <div className="bg-white dark:bg-gray-800 p-3 rounded border">
-                                    <div className="font-medium text-red-600">{assessment.data.jumlahKorban || 0}</div>
-                                    <div className="text-xs text-muted-foreground">Total Korban</div>
-                                  </div>
-                                  <div className="bg-white dark:bg-gray-800 p-3 rounded border">
-                                    <div className="font-medium text-orange-600">{assessment.data.jumlahKorbanLukaBerat || 0}</div>
-                                    <div className="text-xs text-muted-foreground">Luka Berat</div>
-                                  </div>
-                                  <div className="bg-white dark:bg-gray-800 p-3 rounded border">
-                                    <div className="font-medium text-yellow-600">{assessment.data.jumlahKorbanLukaRingan || 0}</div>
-                                    <div className="text-xs text-muted-foreground">Luka Ringan</div>
-                                  </div>
-                                  <div className="bg-white dark:bg-gray-800 p-3 rounded border">
-                                    <div className="font-medium text-blue-600">{assessment.data.jumlahKorbanMeninggal || 0}</div>
-                                    <div className="text-xs text-muted-foreground">Meninggal</div>
-                                  </div>
-                                </div>
-                              )}
+                      return (
+                        <div key={incident.id} className="border rounded-lg p-4 mb-4">
+                          <div className="flex justify-between items-start mb-4">
+                            <div>
+                              <h4 className="font-semibold text-lg">{incident.type}</h4>
+                              <p className="text-sm text-muted-foreground">{incident.location}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {new Date(incident.date).toLocaleString("id-ID")}
+                              </p>
                             </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="text-center py-8 text-muted-foreground">
-                          <p>Belum ada data assessment untuk insiden ini</p>
-                          <p className="text-sm">Petugas assessment akan mengisi data setelah melakukan penilaian di lapangan</p>
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
+                            <div className="flex items-center gap-2">
+                              {getStatusBadge(incident.status)}
+                              <Badge variant="outline" className="text-xs">
+                                {incidentAssessments.length} Assessment
+                              </Badge>
+                            </div>
+                          </div>
 
-                {incidents.length === 0 && (
+                          <div className="space-y-4">
+                            {incidentAssessments.map((assessment, index) => (
+                              <AssessmentCard key={assessment.id} assessment={assessment} index={index} />
+                            ))}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+
+                {/* Standalone Assessments (not linked to incidents) */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-4 text-green-600">📋 Assessment Mandiri</h3>
+                  <div className="space-y-4">
+                    {assessments
+                      .filter(assessment => !assessment.incidentId)
+                      .map((assessment, index) => (
+                        <AssessmentCard key={assessment.id} assessment={assessment} index={index} />
+                      ))}
+                  </div>
+
+                  {assessments.filter(assessment => !assessment.incidentId).length === 0 && (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <p>Belum ada assessment mandiri</p>
+                      <p className="text-sm">Assessment yang tidak dihubungkan dengan insiden akan muncul di sini</p>
+                    </div>
+                  )}
+                </div>
+
+                {assessments.length === 0 && (
                   <div className="text-center py-8 text-muted-foreground">
-                    <p>Belum ada insiden yang diinisiasi</p>
-                    <p className="text-sm">Data assessment akan muncul setelah insiden dibuat dan dinilai</p>
+                    <p>Belum ada data assessment</p>
+                    <p className="text-sm">Data assessment akan muncul setelah petugas melakukan penilaian di lapangan</p>
                   </div>
                 )}
               </div>
