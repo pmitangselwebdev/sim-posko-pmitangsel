@@ -160,8 +160,9 @@ export default function InsidenKejadianDarurat() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="list">Daftar Insiden</TabsTrigger>
+          <TabsTrigger value="assessments">Assessment Data</TabsTrigger>
           <TabsTrigger value="archive">Arsip</TabsTrigger>
         </TabsList>
 
@@ -171,42 +172,202 @@ export default function InsidenKejadianDarurat() {
               <CardTitle>Insiden Aktif</CardTitle>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Jenis</TableHead>
-                    <TableHead>Lokasi</TableHead>
-                    <TableHead>Waktu</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Aksi</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {incidents.filter(incident => incident.status === "active").map((incident) => {
-                    const incidentAssessments = assessments.filter(assessment => assessment.incidentId === incident.id)
-                    return (
-                      <TableRow key={incident.id}>
-                        <TableCell>{incident.type}</TableCell>
-                        <TableCell>{incident.location}</TableCell>
-                        <TableCell>{new Date(incident.date).toLocaleString("id-ID")}</TableCell>
-                        <TableCell>{getStatusBadge(incident.status)}</TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
-                            <Button variant="outline" size="sm" onClick={() => setSelectedIncident(incident)}>
-                              Detail
-                            </Button>
-                            {incidentAssessments.length > 0 && (
-                              <Button variant="outline" size="sm" onClick={() => handleExportReport(incident)}>
-                                Export PDF
-                              </Button>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Jenis</TableHead>
+                      <TableHead>Lokasi</TableHead>
+                      <TableHead>Waktu</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Assessment</TableHead>
+                      <TableHead>Aksi</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {incidents.filter(incident => incident.status === "active").map((incident) => {
+                      const incidentAssessments = assessments.filter(assessment => assessment.incidentId === incident.id)
+                      const latestAssessment = incidentAssessments[0] // Most recent assessment
+
+                      return (
+                        <TableRow key={incident.id}>
+                          <TableCell>{incident.type}</TableCell>
+                          <TableCell>{incident.location}</TableCell>
+                          <TableCell>{new Date(incident.date).toLocaleString("id-ID")}</TableCell>
+                          <TableCell>{getStatusBadge(incident.status)}</TableCell>
+                          <TableCell>
+                            {incidentAssessments.length > 0 ? (
+                              <div className="space-y-1">
+                                <Badge variant="default" className="text-xs bg-green-600">
+                                  ✓ Assessment ({incidentAssessments.length})
+                                </Badge>
+                                {latestAssessment && latestAssessment.type === "bencana" && latestAssessment.data && (
+                                  <div className="text-xs text-muted-foreground">
+                                    Korban: {latestAssessment.data.jumlahKorbanMeninggal || 0} meninggal,
+                                    {latestAssessment.data.jumlahKorbanLukaBerat || 0} luka berat
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <Badge variant="secondary" className="text-xs">
+                                Menunggu Assessment
+                              </Badge>
                             )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })}
-                </TableBody>
-              </Table>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex gap-2">
+                              <Button variant="outline" size="sm" onClick={() => setSelectedIncident(incident)}>
+                                Detail
+                              </Button>
+                              {incidentAssessments.length > 0 && (
+                                <Button variant="outline" size="sm" onClick={() => handleExportReport(incident)}>
+                                  Export PDF
+                                </Button>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })}
+                  </TableBody>
+                </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="assessments" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Data Assessment Lengkap</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Ringkasan semua data assessment yang telah dikumpulkan, dikelompokkan berdasarkan insiden
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                {incidents.map((incident) => {
+                  const incidentAssessments = assessments.filter(assessment => assessment.incidentId === incident.id)
+
+                  return (
+                    <div key={incident.id} className="border rounded-lg p-4">
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <h3 className="font-semibold text-lg">{incident.type}</h3>
+                          <p className="text-sm text-muted-foreground">{incident.location}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(incident.date).toLocaleString("id-ID")}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {getStatusBadge(incident.status)}
+                          <Badge variant="outline" className="text-xs">
+                            {incidentAssessments.length} Assessment
+                          </Badge>
+                        </div>
+                      </div>
+
+                      {incidentAssessments.length > 0 ? (
+                        <div className="space-y-4">
+                          {incidentAssessments.map((assessment, index) => (
+                            <div key={assessment.id} className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
+                              <div className="flex justify-between items-start mb-3">
+                                <div>
+                                  <h4 className="font-medium text-sm">
+                                    Assessment #{index + 1} - {assessment.type === 'bencana' ? 'Bencana' : 'Ambulance'}
+                                  </h4>
+                                  <p className="text-xs text-muted-foreground">
+                                    Oleh: {assessment.user?.namaLengkap || 'Petugas'} |
+                                    {new Date(assessment.createdAt).toLocaleString("id-ID")}
+                                  </p>
+                                </div>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    try {
+                                      const pdf = generateReportPDF(assessment.data, 'assessment-report')
+                                      downloadPDF(pdf, `assessment-${assessment.id}.pdf`)
+                                    } catch (error) {
+                                      alert("Gagal membuat PDF")
+                                    }
+                                  }}
+                                >
+                                  Export PDF
+                                </Button>
+                              </div>
+
+                              {assessment.type === "bencana" && assessment.data && (
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                  <div className="bg-white dark:bg-gray-800 p-3 rounded border">
+                                    <div className="font-medium text-red-600">{assessment.data.jumlahKorbanMeninggal || 0}</div>
+                                    <div className="text-xs text-muted-foreground">Meninggal</div>
+                                  </div>
+                                  <div className="bg-white dark:bg-gray-800 p-3 rounded border">
+                                    <div className="font-medium text-orange-600">{assessment.data.jumlahKorbanLukaBerat || 0}</div>
+                                    <div className="text-xs text-muted-foreground">Luka Berat</div>
+                                  </div>
+                                  <div className="bg-white dark:bg-gray-800 p-3 rounded border">
+                                    <div className="font-medium text-yellow-600">{assessment.data.jumlahKorbanLukaRingan || 0}</div>
+                                    <div className="text-xs text-muted-foreground">Luka Ringan</div>
+                                  </div>
+                                  <div className="bg-white dark:bg-gray-800 p-3 rounded border">
+                                    <div className="font-medium text-blue-600">{assessment.data.jumlahKorbanHilang || 0}</div>
+                                    <div className="text-xs text-muted-foreground">Hilang</div>
+                                  </div>
+                                  <div className="bg-white dark:bg-gray-800 p-3 rounded border">
+                                    <div className="font-medium text-purple-600">{assessment.data.rumahRusakBerat || 0}</div>
+                                    <div className="text-xs text-muted-foreground">Rumah Rusak Berat</div>
+                                  </div>
+                                  <div className="bg-white dark:bg-gray-800 p-3 rounded border">
+                                    <div className="font-medium text-green-600">{assessment.data.rumahRusakRingan || 0}</div>
+                                    <div className="text-xs text-muted-foreground">Rumah Rusak Ringan</div>
+                                  </div>
+                                  <div className="bg-white dark:bg-gray-800 p-3 rounded border col-span-2">
+                                    <div className="font-medium text-gray-600">{assessment.data.jenisBencana || '-'}</div>
+                                    <div className="text-xs text-muted-foreground">Jenis Bencana</div>
+                                  </div>
+                                </div>
+                              )}
+
+                              {assessment.type === "ambulance" && assessment.data && (
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                  <div className="bg-white dark:bg-gray-800 p-3 rounded border">
+                                    <div className="font-medium text-red-600">{assessment.data.jumlahKorban || 0}</div>
+                                    <div className="text-xs text-muted-foreground">Total Korban</div>
+                                  </div>
+                                  <div className="bg-white dark:bg-gray-800 p-3 rounded border">
+                                    <div className="font-medium text-orange-600">{assessment.data.jumlahKorbanLukaBerat || 0}</div>
+                                    <div className="text-xs text-muted-foreground">Luka Berat</div>
+                                  </div>
+                                  <div className="bg-white dark:bg-gray-800 p-3 rounded border">
+                                    <div className="font-medium text-yellow-600">{assessment.data.jumlahKorbanLukaRingan || 0}</div>
+                                    <div className="text-xs text-muted-foreground">Luka Ringan</div>
+                                  </div>
+                                  <div className="bg-white dark:bg-gray-800 p-3 rounded border">
+                                    <div className="font-medium text-blue-600">{assessment.data.jumlahKorbanMeninggal || 0}</div>
+                                    <div className="text-xs text-muted-foreground">Meninggal</div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8 text-muted-foreground">
+                          <p>Belum ada data assessment untuk insiden ini</p>
+                          <p className="text-sm">Petugas assessment akan mengisi data setelah melakukan penilaian di lapangan</p>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+
+                {incidents.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <p>Belum ada insiden yang diinisiasi</p>
+                    <p className="text-sm">Data assessment akan muncul setelah insiden dibuat dan dinilai</p>
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

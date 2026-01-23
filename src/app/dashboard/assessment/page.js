@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -62,6 +62,8 @@ export default function Assessment() {
   const [isGettingLocation, setIsGettingLocation] = useState(false)
   const [showMinimap, setShowMinimap] = useState(false)
   const [currentCoords, setCurrentCoords] = useState(null)
+  const [incidents, setIncidents] = useState([])
+  const [selectedIncidentId, setSelectedIncidentId] = useState("")
 
   const form = useForm({
     resolver: zodResolver(assessmentSchema),
@@ -103,16 +105,44 @@ export default function Assessment() {
     },
   })
 
+  // Fetch incidents on component mount
+  useEffect(() => {
+    const fetchIncidents = async () => {
+      try {
+        const response = await fetch("/api/incidents")
+        if (response.ok) {
+          const data = await response.json()
+          setIncidents(data.filter(incident => incident.status === "active"))
+        }
+      } catch (error) {
+        console.error("Error fetching incidents:", error)
+      }
+    }
+    fetchIncidents()
+  }, [])
+
   const onSubmit = async (data) => {
     try {
+      const payload = {
+        ...data,
+        incidentId: selectedIncidentId || null,
+        kontak: kontak.filter(k => k.nama && k.jabatan && k.nomorTelepon)
+      }
+
       const response = await fetch("/api/assessment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
       })
       const result = await response.json()
       if (response.ok) {
         alert("Assessment submitted successfully!")
+        // Reset form
+        form.reset()
+        setSelectedIncidentId("")
+        setKontak([{ nama: "", jabatan: "", nomorTelepon: "" }])
+        setShowMinimap(false)
+        setCurrentCoords(null)
       } else {
         alert(result.error || "Error submitting assessment")
       }
@@ -184,6 +214,36 @@ export default function Assessment() {
               <SelectItem value="ambulance">Assessment Ambulance Darurat/Kecelakaan</SelectItem>
             </SelectContent>
           </Select>
+        </CardContent>
+      </Card>
+
+      {/* Incident Selection */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Link ke Insiden Aktif (Opsional)</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Pilih insiden yang sedang aktif untuk menghubungkan assessment ini. Data assessment akan ditampilkan di halaman laporan insiden.
+          </p>
+        </CardHeader>
+        <CardContent>
+          <Select value={selectedIncidentId} onValueChange={setSelectedIncidentId}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Pilih insiden aktif (opsional)" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Tidak dihubungkan ke insiden</SelectItem>
+              {incidents.map((incident) => (
+                <SelectItem key={incident.id} value={incident.id}>
+                  {incident.type} - {incident.location} ({new Date(incident.date).toLocaleDateString("id-ID")})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {incidents.length === 0 && (
+            <p className="text-sm text-muted-foreground mt-2">
+              Tidak ada insiden aktif. Assessment akan disimpan sebagai data mandiri.
+            </p>
+          )}
         </CardContent>
       </Card>
 
