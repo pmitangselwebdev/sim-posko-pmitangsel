@@ -284,7 +284,7 @@ export default function LandingPage() {
             <div>
               <h3 className="font-semibold mb-4">Lokasi</h3>
               <p className="text-sm text-gray-400">
-                Jl. Raya Serpong No. 1<br />
+                Jl. Cendekia Sektor 11, Ciater, Serpong<br />
                 Kota Tangerang Selatan<br />
                 Banten 15310
               </p>

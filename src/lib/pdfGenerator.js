@@ -602,3 +602,226 @@ export const generateSchedulePDF = async (schedules, currentMonth, currentYear) 
 export const downloadPDF = (pdf, filename) => {
   pdf.save(filename);
 };
+
+// New function for generating ambulance report PDF
+export const generateAmbulanceReportPDF = async (ambulanceForm) => {
+  const pdf = new jsPDF('p', 'mm', 'a4');
+
+  // Set font
+  pdf.setFont('helvetica');
+
+  // Header
+  pdf.setFontSize(20);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('KARTU LUKA', 105, 20, { align: 'center' });
+
+  pdf.setFontSize(16);
+  pdf.text('LOMBA PERTOLONGAN PERTAMA', 105, 35, { align: 'center' });
+
+  // Date
+  pdf.setFontSize(10);
+  pdf.text(`Tanggal: ${new Date().toLocaleDateString('id-ID')}`, 20, 50);
+
+  let yPosition = 70;
+
+  // BIO DATA
+  pdf.setFontSize(12);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('BIO DATA', 20, yPosition);
+  yPosition += 15;
+
+  pdf.setFont('helvetica', 'normal');
+  pdf.setFontSize(10);
+
+  // Nama korban
+  pdf.text(`Nama korban: ${ambulanceForm.data.namaKorban || '________________________'}`, 20, yPosition);
+  yPosition += 10;
+
+  // Alamat
+  pdf.text(`Alamat: ${ambulanceForm.data.alamat || '________________________'}`, 20, yPosition);
+  yPosition += 10;
+
+  // Nama saksi
+  pdf.text(`Nama saksi: ${ambulanceForm.data.namaSaksi || '________________________'}`, 20, yPosition);
+  yPosition += 10;
+
+  // Alamat saksi
+  pdf.text(`Alamat: ${ambulanceForm.data.alamatSaksi || '________________________'}`, 20, yPosition);
+  yPosition += 10;
+
+  // Phone
+  pdf.text(`Phone: ${ambulanceForm.data.nomorTelepon || '________________________'}`, 20, yPosition);
+  yPosition += 20;
+
+  // PENILAIAN DINI
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('PENILAIAN DINI', 20, yPosition);
+  yPosition += 15;
+
+  pdf.setFont('helvetica', 'normal');
+
+  // Kesan Umum
+  pdf.text(`Kesan Umum: ${ambulanceForm.data.jenisKejadian || 'Trauma / Medis'}`, 20, yPosition);
+  yPosition += 10;
+
+  // Respon
+  pdf.text(`Respon: ${ambulanceForm.data.respon || 'Awas/Suara/Nyeri/Tidak Respon'}`, 20, yPosition);
+  yPosition += 10;
+
+  // Nafas
+  pdf.text(`Nafas: ${ambulanceForm.data.nafas || 'Ada / Tidak'}`, 20, yPosition);
+  yPosition += 10;
+
+  // Nadi
+  pdf.text(`Nadi: ${ambulanceForm.data.nadi || 'Ada / Tidak'}`, 20, yPosition);
+  yPosition += 10;
+
+  // Perdarahan Besar
+  pdf.text(`Perdarahan Besar: ${ambulanceForm.data.perdarahanBesar || 'Ada / Tidak'}`, 20, yPosition);
+  yPosition += 20;
+
+  // JENIS LUKA
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('JENIS LUKA', 20, yPosition);
+  yPosition += 15;
+
+  pdf.setFont('helvetica', 'normal');
+
+  // Jenis luka 1
+  pdf.text(`1. ${ambulanceForm.data.jenisCedera || '____________________________________'}`, 20, yPosition);
+  yPosition += 10;
+
+  // Jenis luka 2
+  pdf.text(`2. ${ambulanceForm.data.jenisCedera2 || '____________________________________'}`, 20, yPosition);
+  yPosition += 10;
+
+  // Jenis luka 3
+  pdf.text(`3. ${ambulanceForm.data.jenisCedera3 || '____________________________________'}`, 20, yPosition);
+  yPosition += 20;
+
+  // PERTOLONGAN YANG DILAKUKAN
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('PERTOLONGAN YANG DILAKUKAN:', 20, yPosition);
+  yPosition += 15;
+
+  pdf.setFont('helvetica', 'normal');
+
+  // Pertolongan 1
+  pdf.text(`1. ${ambulanceForm.data.penjelasanTindakan || '____________________________________'}`, 20, yPosition);
+  yPosition += 10;
+  pdf.text('   _________________________________________', 20, yPosition);
+  yPosition += 10;
+
+  // Pertolongan 2
+  pdf.text(`2. ${ambulanceForm.data.penjelasanTindakan2 || '____________________________________'}`, 20, yPosition);
+  yPosition += 10;
+  pdf.text('   _________________________________________', 20, yPosition);
+  yPosition += 10;
+
+  // Pertolongan 3
+  pdf.text(`3. ${ambulanceForm.data.penjelasanTindakan3 || '____________________________________'}`, 20, yPosition);
+  yPosition += 10;
+  pdf.text('   _________________________________________', 20, yPosition);
+  yPosition += 20;
+
+  // TANDA VITAL
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('TANDA VITAL', 20, yPosition);
+  yPosition += 15;
+
+  pdf.setFont('helvetica', 'normal');
+
+  // Frekuensi Napas
+  pdf.text(`Frekuensi Napas: ${ambulanceForm.data.frekuensiNafas || '_________/menit'}`, 20, yPosition);
+  yPosition += 10;
+
+  // Frekuensi Nadi
+  pdf.text(`Frekuensi Nadi: ${ambulanceForm.data.frekuensiNadi || '_________/menit'}`, 20, yPosition);
+  yPosition += 10;
+
+  // Suhu
+  pdf.text(`Suhu: ${ambulanceForm.data.suhu || 'Normal/Panas/Dingin'}`, 20, yPosition);
+  yPosition += 10;
+
+  // Kondisi Kulit
+  pdf.text(`Kondisi Kulit: ${ambulanceForm.data.kondisiKulit || 'Lembab/Kering/Pucat/Normal/Kebiruan/Berkeringat'}`, 20, yPosition);
+  yPosition += 20;
+
+  // KETERANGAN
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('KETERANGAN', 20, yPosition);
+  yPosition += 15;
+
+  pdf.setFont('helvetica', 'normal');
+
+  // Perdarahan
+  pdf.text(`: Perdarahan`, 20, yPosition);
+  yPosition += 10;
+
+  // Luka
+  pdf.text(`: Luka`, 20, yPosition);
+  yPosition += 10;
+
+  // Patah Tulang
+  pdf.text(`: Patah Tulang`, 20, yPosition);
+  yPosition += 20;
+
+  // KOMPAK
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('KOMPAK:', 20, yPosition);
+  yPosition += 15;
+
+  pdf.setFont('helvetica', 'normal');
+
+  // Keluhan Utama
+  pdf.text(`Keluhan Utama: ${ambulanceForm.data.keluhan || '________________________________________________________________________________'}`, 20, yPosition);
+  yPosition += 15;
+
+  // Obat Terakhir
+  pdf.text(`Obat Terakhir: ${ambulanceForm.data.obat || '________________________________________________________________________________'}`, 20, yPosition);
+  yPosition += 15;
+
+  // Makanan/Minuman Terakhir
+  pdf.text(`Makanan/Minuman Terakhir: ${ambulanceForm.data.makanMinum || '________________________________________________________________________________'}`, 20, yPosition);
+  yPosition += 15;
+
+  // Penyakit yang diderita
+  pdf.text(`Penyakit yang diderita: ${ambulanceForm.data.penyakit || '________________________________________________________________________________'}`, 20, yPosition);
+  yPosition += 15;
+
+  // Alergi yang diderita
+  pdf.text(`Alergi yang diderita: ${ambulanceForm.data.alergi || '________________________________________________________________________________'}`, 20, yPosition);
+  yPosition += 15;
+
+  // Kejadian
+  pdf.text(`Kejadian: ${ambulanceForm.data.kejadian || '________________________________________________________________________________'}`, 20, yPosition);
+  yPosition += 20;
+
+  // KETERANGAN
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('KETERANGAN', 20, yPosition);
+  yPosition += 15;
+
+  pdf.setFont('helvetica', 'normal');
+
+  // Dirujuk ke
+  pdf.text(`Dirujuk ke: ${ambulanceForm.data.statusRujukan || 'Rumah Sakit/Puskesmas/Dokter/Lainnya.'}`, 20, yPosition);
+  yPosition += 20;
+
+  // Footer
+  pdf.setFontSize(10);
+  pdf.setFont('helvetica', 'normal');
+  const location = ambulanceForm.data.lokasi || 'Ampel';
+  const date = new Date().toLocaleDateString('id-ID');
+  pdf.text(`${location}, ${date}`, 120, yPosition);
+
+  yPosition += 15;
+
+  // Petugas Penolong
+  pdf.text('Petugas Penolong', 120, yPosition);
+  yPosition += 15;
+
+  pdf.text('(________________)', 120, yPosition);
+
+  return pdf.output('arraybuffer');
+};
